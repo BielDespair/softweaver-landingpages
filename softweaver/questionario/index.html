@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF6F1">
+<title>Questionário</title>
+<style>
+  :root{
+    --bg:#FBF6F1;
+    --ink:#2A1F24;
+    --muted:#7A6A70;
+    --line:#EADFD8;
+    --card:#FFFFFF;
+    --accent:#B23A62;
+    --accent-2:#E98A5B;
+    --accent-soft:#F8E3EA;
+    --erro:#C0392B;
+    --radius:18px;
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  body{
+    margin:0;min-height:100vh;font-family:var(--sans);color:var(--ink);background:var(--bg);
+    background-image:
+      radial-gradient(55rem 38rem at 115% -10%, #F6D5DF 0%, transparent 60%),
+      radial-gradient(48rem 34rem at -25% 110%, #FBE2D0 0%, transparent 60%);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- Topo / progresso ---------- */
+  .topo{
+    position:sticky;top:0;z-index:10;
+    background:rgba(251,246,241,.82);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .topo-inner{max-width:680px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px}
+  .etapa,.pct{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .etapa{font-weight:700;color:var(--ink)}
+  .barra{flex:1;height:6px;background:var(--line);border-radius:99px;overflow:hidden}
+  .barra span{
+    display:block;height:100%;width:0;border-radius:inherit;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    transition:width .45s cubic-bezier(.2,.8,.2,1);
+  }
+
+  /* ---------- Telas ---------- */
+  main{max-width:680px;margin:0 auto;padding:32px 18px 150px}
+  .tela{animation:entrar .45s cubic-bezier(.2,.8,.2,1)}
+  @keyframes entrar{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 6px;
+  }
+  h1,h2{font-family:var(--serif);font-weight:600;letter-spacing:-.015em;margin:.15em 0 .35em}
+  h1{font-size:clamp(38px,9vw,58px);line-height:1}
+  h1 em{font-style:italic;color:var(--accent)}
+  h2{font-size:clamp(30px,6.5vw,40px);line-height:1.08}
+  h2:focus{outline:none}
+  .sub{color:var(--muted);margin:0 0 26px;font-size:16.5px;line-height:1.55}
+
+  /* Intro */
+  #intro{padding-top:6vh}
+  .meta{list-style:none;padding:0;margin:0 0 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .meta li{background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:16px;padding:14px 12px}
+  .meta strong{display:block;font-family:var(--serif);font-size:28px;line-height:1;margin-bottom:4px}
+  .meta span{font-size:13px;color:var(--muted)}
+  .aviso{font-size:14px;line-height:1.5;color:#6d4a58;background:var(--accent-soft);border-radius:14px;padding:12px 14px;margin:0 0 26px}
+
+  /* ---------- Perguntas ---------- */
+  .q{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 18px 18px;margin:0 0 14px;
+    box-shadow:0 1px 2px rgba(42,31,36,.04),0 10px 28px -16px rgba(42,31,36,.18);
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .q-titulo{margin:0;font-weight:650;font-size:17px;line-height:1.38}
+  .dica{margin:5px 0 0;font-size:13px;color:var(--muted)}
+  .opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+
+  .chip{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .chip input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+  .chip span{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:10px 15px;border:1.5px solid var(--line);border-radius:99px;background:#fff;
+    font-size:15px;line-height:1.2;user-select:none;
+    transition:background .18s,border-color .18s,color .18s,transform .12s,box-shadow .18s;
+  }
+  .chip:hover span{border-color:#D8BFC7}
+  .chip:active span{transform:scale(.96)}
+  .chip input:checked + span{
+    background:var(--accent);border-color:var(--accent);color:#fff;
+    box-shadow:0 6px 16px -8px rgba(178,58,98,.7);animation:pop .25s;
+  }
+  .chip input[type=checkbox]:checked + span::before{content:"✓";font-weight:800;font-size:13px}
+  .chip input:focus-visible + span{outline:3px solid rgba(178,58,98,.35);outline-offset:2px}
+  .chip input:disabled + span{opacity:.38;cursor:not-allowed}
+  .chip input:disabled{cursor:not-allowed}
+  @keyframes pop{50%{transform:scale(1.06)}}
+
+  .txt,.outro-input{
+    width:100%;margin-top:14px;padding:13px 14px;
+    border:1.5px solid var(--line);border-radius:12px;background:#FFFDFB;color:var(--ink);
+    font:inherit;font-size:16px;transition:border-color .2s, box-shadow .2s;
+  }
+  .txt::placeholder,.outro-input::placeholder{color:#B5A7AC}
+  .txt:focus,.outro-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .outro-input{animation:entrar .25s ease-out}
+
+  .erro{margin:10px 0 0;font-size:13.5px;font-weight:600;color:var(--erro)}
+  .erro:empty{display:none}
+  .q.invalida{border-color:var(--erro);box-shadow:0 0 0 3px rgba(192,57,43,.12);animation:tremer .35s}
+  @keyframes tremer{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+  /* ---------- Navegação ---------- */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:10;
+    padding:28px 18px calc(16px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top, var(--bg) 62%, rgba(251,246,241,0));
+  }
+  .nav-inner{max-width:680px;margin:0 auto}
+  .nav-botoes{display:flex;gap:10px}
+  .msg-envio{margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#FDECEA;color:var(--erro);font-size:14px;text-align:center}
+  .msg-envio:empty{display:none}
+
+  .btn{
+    appearance:none;border:0;border-radius:14px;padding:15px 22px;cursor:pointer;
+    font:inherit;font-size:16px;font-weight:650;
+    transition:transform .12s, background .2s, box-shadow .2s, opacity .2s;
+  }
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.6;cursor:progress}
+  .btn:focus-visible{outline:3px solid rgba(178,58,98,.4);outline-offset:2px}
+  .btn-pri{flex:1;background:var(--ink);color:#fff;box-shadow:0 12px 26px -12px rgba(42,31,36,.55)}
+  .btn-pri:hover{background:#3D2D34}
+  .btn-sec{background:rgba(255,255,255,.8);border:1.5px solid var(--line);color:var(--ink)}
+  .btn-enviar,.btn-enviar:hover{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+  .btn-grande{width:100%}
+
+  /* ---------- Final ---------- */
+  #fim{text-align:center;padding-top:10vh}
+  .check{width:88px;height:88px;margin:0 auto 20px}
+  .check svg{width:100%;height:100%;fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+  .check circle{stroke-dasharray:151;stroke-dashoffset:151;animation:traco .6s ease-out forwards}
+  .check path{stroke-dasharray:40;stroke-dashoffset:40;animation:traco .4s .5s ease-out forwards}
+  @keyframes traco{to{stroke-dashoffset:0}}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important;transition:none !important}
+    .check circle,.check path{stroke-dashoffset:0}
+  }
+</style>
+</head>
+<body>
+
+<header class="topo" id="topo" hidden>
+  <div class="topo-inner">
+    <span class="etapa" id="etapa">1/6</span>
+    <div class="barra" role="progressbar" aria-label="Progresso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <span id="barra"></span>
+    </div>
+    <span class="pct" id="pct">0%</span>
+  </div>
+</header>
+
+<main id="app">
+  <!-- Tela inicial: edite os textos como quiser -->
+  <section id="intro" class="tela">
+    <p class="eyebrow">✦ Questionário</p>
+    <h1>Conta um pouco <em>sobre você</em></h1>
+    <p class="sub">Perguntas rápidas sobre rotina, estilo e gostos. Quase tudo é só tocar nas opções.</p>
+    <ul class="meta">
+      <li><strong>~5</strong><span>minutos</span></li>
+      <li><strong id="n-secoes">6</strong><span>seções</span></li>
+      <li><strong id="n-perguntas">51</strong><span>perguntas</span></li>
+    </ul>
+    <p class="aviso">Algumas perguntas são mais pessoais. Nelas você encontra a opção “Prefiro não responder”.</p>
+    <button class="btn btn-pri btn-grande" id="comecar" type="button">Começar</button>
+  </section>
+
+  <!-- As seções são geradas pelo JavaScript e entram aqui -->
+
+  <section id="fim" class="tela" hidden>
+    <div class="check" aria-hidden="true">
+      <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-15"/></svg>
+    </div>
+    <h1>Respostas enviadas!</h1>
+    <p class="sub">Obrigado por participar. Você já pode fechar esta página.</p>
+  </section>
+</main>
+
+<div class="nav" id="nav" hidden>
+  <div class="nav-inner">
+    <p class="msg-envio" id="msg-envio" role="alert"></p>
+    <div class="nav-botoes">
+      <button class="btn btn-sec" id="voltar" type="button">Voltar</button>
+      <button class="btn btn-pri" id="proximo" type="button">Próximo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================ CONFIGURAÇÃO ============================
+const API_URL = "https://SEU-SERVIDOR/api/respostas"; // <- coloque a URL da sua API aqui
+const TIMEOUT_MS = 15000;                              // tempo máximo de espera do POST
+// ======================================================================
+
+const FREQUENCIA   = ["Sempre", "Frequentemente", "Às vezes", "Raramente", "Nunca"];
+const FREQ_EVENTOS = ["Várias vezes por mês", "Uma vez por mês", "Algumas vezes por ano", "Raramente", "Nunca"];
+const PREFIRO_NAO  = "Prefiro não responder";
+const OUTRO        = "Outro";
+
+// Tipos:  unica -> string | multipla -> array | sim_nao -> boolean | texto -> string ou null
+// Opções extras: { outro: true } abre campo "Qual?"; { max: N } limita escolhas;
+//                { exclusiva: "Não tenho" } opção que não combina com as outras.
+const unica    = (id, pergunta, opcoes, o = {}) => ({ id, tipo: "unica", pergunta, opcoes, ...o });
+const multipla = (id, pergunta, opcoes, o = {}) => ({ id, tipo: "multipla", pergunta, opcoes, ...o });
+const simNao   = (id, pergunta) => ({ id, tipo: "sim_nao", pergunta });
+const texto    = (id, pergunta) => ({ id, tipo: "texto", pergunta });
+
+const SECOES = [
+  {
+    titulo: "Beleza e cuidados",
+    sub: "Sua rotina de cuidados com pele, cabelo e unhas.",
+    perguntas: [
+      unica("auto_cuidado", "Com que frequência você reserva um tempo para o autocuidado?",
+        ["Todos os dias", "Algumas vezes por semana", "Uma vez por semana", "Raramente", "Nunca"]),
+      unica("cor_favorita", "Qual é a sua cor favorita?",
+        ["Preto", "Branco", "Rosa", "Vermelho", "Azul", "Verde", "Roxo / lilás", "Amarelo",
+         "Laranja", "Nude / bege", "Marrom", "Dourado", "Prata"], { outro: true }),
+      unica("cronograma_capilar", "Você faz cronograma capilar?",
+        ["Sim, sigo certinho", "Sim, mas sem muita regularidade", "Já fiz, não faço mais", "Nunca fiz"]),
+      multipla("produtos_mais_usados", "Quais produtos você mais usa no dia a dia?",
+        ["Shampoo e condicionador", "Máscara capilar", "Leave-in / finalizador", "Óleo capilar",
+         "Protetor térmico", "Hidratante corporal", "Protetor solar", "Sabonete facial",
+         "Sérum / ácidos", "Hidratante facial", "Base / BB cream", "Corretivo", "Máscara de cílios",
+         "Batom / gloss", "Perfume / body splash", "Esmalte"], { outro: true }),
+      unica("skin_care", "Como é a sua rotina de skincare?",
+        ["Completa, de manhã e à noite", "Básica (limpeza, hidratação e protetor)", "Faço só às vezes", "Não faço"]),
+      unica("depilacao_laser", "Você faz ou já fez depilação a laser?",
+        ["Já concluí", "Estou fazendo", "Não, mas tenho vontade", "Não"]),
+      unica("tatuagem", "Você tem tatuagem?",
+        ["Não tenho", "Não tenho, mas quero fazer", "1", "2 a 4", "5 ou mais"]),
+      unica("cor_do_cabelo", "Qual é a cor atual do seu cabelo?",
+        ["Preto", "Castanho escuro", "Castanho claro", "Loiro", "Ruivo", "Grisalho / branco",
+         "Com mechas / luzes", "Colorido (rosa, azul...)"], { outro: true }),
+      unica("usa_volume_russo", "Com que frequência você usa extensão de cílios (volume russo)?", FREQUENCIA),
+      unica("tamanho_unha_postiça", "Qual tamanho de unha postiça (gel, fibra, tips) você costuma usar?",
+        ["Não uso", "Curta", "Média", "Longa", "Extra longa"]),
+      unica("bronze", "Você faz bronze?",
+        ["Sim, natural (sol)", "Sim, com fita / marquinha", "Sim, a jato ou autobronzeador", "Não faço"]),
+    ],
+  },
+  {
+    titulo: "Gostos e hábitos",
+    sub: "Música, hobbies e um pouco da sua rotina.",
+    perguntas: [
+      multipla("hobbies_favoritos", "Quais são seus hobbies favoritos?",
+        ["Ler", "Ver séries / filmes", "Jogar videogame", "Dançar", "Cozinhar", "Praticar esportes",
+         "Viajar", "Fotografar", "Desenhar / pintar", "Tocar instrumento", "Fazer compras",
+         "Sair com amigos", "Artesanato / DIY", "Cuidar de plantas"], { max: 5, outro: true }),
+      multipla("estilo_musical_favorito", "Quais estilos musicais você mais curte?",
+        ["Sertanejo", "Funk", "Pop", "Pagode / samba", "Forró / piseiro", "Rock", "MPB", "Rap / trap",
+         "Eletrônica", "Gospel", "K-pop", "Reggaeton / latino", "R&B", "Indie"], { outro: true }),
+      texto("cantora_favorita", "Quem é a sua cantora favorita?"),
+      texto("youtuber_favorito", "Qual é o seu youtuber ou influenciador favorito?"),
+      unica("bebe", "Você consome bebida alcoólica?",
+        ["Não bebo", "Raramente", "Socialmente", "Com frequência"]),
+      unica("fuma", "Você fuma (incluindo vape / pod)?",
+        ["Não fumo", "Só socialmente", "Sim, com frequência", "Parei de fumar"]),
+      unica("usa_drogas", "Você usa alguma substância recreativa?",
+        ["Não", "Raramente", "Às vezes", "Com frequência", PREFIRO_NAO]),
+      unica("decote", "Com que frequência você usa roupas com decote?", FREQUENCIA),
+      unica("roupa_apertada", "Com que frequência você usa roupas justas?", FREQUENCIA),
+      texto("perfume_favorito", "Qual é o seu perfume favorito?"),
+      texto("livro_favorito", "Qual é o seu livro favorito?"),
+      multipla("atividade_fisica", "Quais atividades físicas você pratica?",
+        ["Musculação", "Corrida", "Caminhada", "Pilates", "Yoga", "Dança", "Funcional / crossfit",
+         "Natação", "Lutas", "Ciclismo / spinning", "Esporte coletivo (vôlei, futebol...)"],
+        { exclusiva: "Não pratico", outro: true }),
+      unica("frequenta_igreja", "Com que frequência você vai à igreja ou a cultos religiosos?",
+        ["Toda semana", "Algumas vezes por mês", "Só em datas especiais", "Não frequento", PREFIRO_NAO]),
+    ],
+  },
+  {
+    titulo: "Estética",
+    sub: "Roupas, maquiagem e acessórios.",
+    perguntas: [
+      multipla("estilo_de_roupa", "Como você descreveria seu estilo de roupa?",
+        ["Casual", "Básico / minimalista", "Streetwear", "Esportivo / athleisure", "Romântico / delicado",
+         "Elegante / social", "Sexy", "Boho", "Alternativo / rock", "Vintage / retrô", "Y2K", "Country"],
+        { max: 3 }),
+      unica("tipo_de_maquiagem", "Que tipo de maquiagem você costuma usar?",
+        ["Não uso", "Natural (efeito “sem make”)", "Leve, do dia a dia", "Marcada / glam", "Artística / colorida"]),
+      unica("usa_delineador", "Com que frequência você usa delineador?", FREQUENCIA),
+      unica("usa_batom", "Com que frequência você usa batom?", FREQUENCIA),
+      unica("usa_acessorios", "Com que frequência você usa acessórios?", FREQUENCIA),
+      unica("acessorio_favorito", "Qual é o seu acessório favorito?",
+        ["Brincos", "Colares", "Anéis", "Pulseiras", "Relógio", "Óculos de sol", "Bolsas",
+         "Boné / chapéu", "Piercing", "Acessórios de cabelo"], { outro: true }),
+      multipla("tipo_de_sapato", "Quais tipos de sapato você mais usa?",
+        ["Tênis", "Sandália", "Rasteirinha", "Salto alto", "Salto bloco", "Bota", "Plataforma",
+         "Sapatilha / mocassim", "Chinelo"], { max: 3 }),
+      unica("usa_salto", "Com que frequência você usa salto?", FREQUENCIA),
+      unica("usa_bota", "Com que frequência você usa bota?", FREQUENCIA),
+    ],
+  },
+  {
+    titulo: "Música e entretenimento",
+    sub: "Filmes, séries, jogos e rolês.",
+    perguntas: [
+      texto("filme_favorito", "Qual é o seu filme favorito?"),
+      texto("serie_favorita", "Qual é a sua série favorita?"),
+      texto("jogo_favorito", "Qual é o seu jogo favorito? (videogame, celular, tabuleiro...)"),
+      texto("artista_favorito", "Quem é o seu artista favorito? (música, cinema, arte...)"),
+      unica("frequenta_shows", "Com que frequência você vai a shows?", FREQ_EVENTOS),
+      unica("frequenta_festivais", "Com que frequência você vai a festivais?", FREQ_EVENTOS),
+      unica("frequenta_baladas", "Com que frequência você vai a baladas?", FREQ_EVENTOS),
+    ],
+  },
+  {
+    titulo: "Hobbies",
+    sub: "Como você gosta de passar o tempo livre.",
+    perguntas: [
+      multipla("atividade_de_fim_de_semana", "O que você mais gosta de fazer no fim de semana?",
+        ["Descansar em casa", "Sair com amigos", "Ir a bares", "Balada / festa", "Passear no shopping",
+         "Programa ao ar livre (parque, trilha, cachoeira)", "Viajar", "Maratonar séries / filmes",
+         "Ficar com a família", "Praticar esporte", "Cozinhar / receber gente em casa", "Ir à igreja"],
+        { max: 3, outro: true }),
+      multipla("tipo_de_viagem", "Que tipo de viagem você prefere?",
+        ["Praia", "Montanha / campo", "Cidade grande", "Aventura / ecoturismo", "Cultural / histórica",
+         "Resort / all inclusive", "Mochilão", "Cruzeiro", "Internacional", "Viagem para show ou festival"],
+        { max: 3 }),
+      simNao("gosta_de_fotografia", "Você gosta de fotografia?"),
+      simNao("gosta_de_dancar", "Você gosta de dançar?"),
+      simNao("gosta_de_cozinhar", "Você gosta de cozinhar?"),
+      simNao("gosta_de_ler", "Você gosta de ler?"),
+    ],
+  },
+  {
+    titulo: "Estilo de vida",
+    sub: "Comida, bebida e bichos. Última parte!",
+    perguntas: [
+      multipla("tipo_de_restaurante_favorito", "Quais tipos de restaurante você mais gosta?",
+        ["Japonês", "Italiano / massas", "Pizzaria", "Hamburgueria", "Churrascaria",
+         "Comida brasileira / caseira", "Mexicano", "Árabe", "Asiático (chinês, tailandês, coreano)",
+         "Frutos do mar", "Vegetariano / vegano", "Fast food", "Cafeteria / confeitaria"],
+        { max: 3, outro: true }),
+      unica("bebida_favorita", "Qual é a sua bebida favorita?",
+        ["Água", "Refrigerante", "Suco", "Café", "Chá", "Cerveja", "Vinho", "Drinks / coquetéis",
+         "Destilados (vodka, gin, whisky...)", "Energético"], { outro: true }),
+      unica("cafe_ou_cha", "Café ou chá?", ["Café", "Chá", "Os dois", "Nenhum"]),
+      unica("animal_favorito", "Qual é o seu animal favorito?",
+        ["Cachorro", "Gato", "Cavalo", "Coelho", "Pássaros", "Golfinho", "Panda",
+         "Felinos selvagens", "Tartaruga"], { outro: true }),
+      multipla("pet", "Você tem pet? Quais?",
+        ["Cachorro", "Gato", "Pássaro", "Peixe", "Roedor (hamster, porquinho-da-índia...)", "Coelho", "Réptil"],
+        { exclusiva: "Não tenho pet", outro: true }),
+    ],
+  },
+];
+
+// ============================ LÓGICA ============================
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+function el(tag, classe, txt) {
+  const e = document.createElement(tag);
+  if (classe) e.className = classe;
+  if (txt != null) e.textContent = txt;
+  return e;
+}
+
+const PERGUNTAS   = SECOES.flatMap(s => s.perguntas);
+const OBRIGATORIAS = PERGUNTAS.filter(q => q.tipo !== "texto");
+console.assert(new Set(PERGUNTAS.map(q => q.id)).size === PERGUNTAS.length, "IDs repetidos no questionário");
+
+const app = $("#app"), intro = $("#intro"), fim = $("#fim"), topo = $("#topo"), nav = $("#nav");
+const btnVoltar = $("#voltar"), btnProximo = $("#proximo"), msgEnvio = $("#msg-envio");
+const cards = {};
+const telasSecao = [];
+let atual = -1, enviando = false, enviado = false;
+
+function criarPergunta(q) {
+  const card = el("div", "q");
+  const idTitulo = "t-" + q.id;
+  card.setAttribute("role", q.tipo === "unica" || q.tipo === "sim_nao" ? "radiogroup" : "group");
+  card.setAttribute("aria-labelledby", idTitulo);
+
+  const titulo = el("p", "q-titulo", q.pergunta);
+  titulo.id = idTitulo;
+  card.append(titulo);
+
+  const dica = q.tipo === "texto" ? "Opcional"
+    : q.tipo === "multipla" ? (q.max ? `Escolha até ${q.max}` : "Pode marcar mais de uma")
+    : null;
+  if (dica) card.append(el("p", "dica", dica));
+
+  if (q.tipo === "texto") {
+    const inp = el("input", "txt");
+    inp.type = "text";
+    inp.maxLength = 120;
+    inp.placeholder = "Digite aqui";
+    inp.setAttribute("aria-labelledby", idTitulo);
+    card.append(inp);
+  } else {
+    const itens = q.tipo === "sim_nao"
+      ? [["Sim", "true"], ["Não", "false"]]
+      : [...q.opcoes, ...(q.outro ? [OUTRO] : []), ...(q.exclusiva ? [q.exclusiva] : [])].map(o => [o, o]);
+
+    const wrap = el("div", "opts");
+    for (const [rotulo, valor] of itens) {
+      const chip = el("label", "chip");
+      const inp = el("input", "opt");
+      inp.type = q.tipo === "multipla" ? "checkbox" : "radio";
+      inp.name = q.id;
+      inp.value = valor;
+      chip.append(inp, el("span", null, rotulo));
+      wrap.append(chip);
+    }
+    wrap.addEventListener("change", e => aoMarcar(q, card, e.target));
+    card.append(wrap);
+
+    if (q.outro) {
+      const outro = el("input", "outro-input");
+      outro.type = "text";
+      outro.maxLength = 80;
+      outro.placeholder = "Qual?";
+      outro.hidden = true;
+      outro.setAttribute("aria-label", "Outra opção: qual?");
+      outro.addEventListener("input", () => limparErro(card));
+      card.append(outro);
+    }
+  }
+
+  const erro = el("p", "erro");
+  erro.setAttribute("aria-live", "polite");
+  card.append(erro);
+
+  cards[q.id] = card;
+  return card;
+}
+
+function aoMarcar(q, card, alvo) {
+  const opts = $$("input.opt", card);
+
+  // Opção exclusiva ("Não tenho pet", "Não pratico")
+  if (q.tipo === "multipla" && q.exclusiva && alvo.checked) {
+    const ehExclusiva = alvo.value === q.exclusiva;
+    opts.forEach(i => {
+      if (i !== alvo && (ehExclusiva || i.value === q.exclusiva)) i.checked = false;
+    });
+  }
+
+  // Limite de escolhas
+  if (q.tipo === "multipla" && q.max) {
+    const n = opts.filter(i => i.checked).length;
+    opts.forEach(i => { i.disabled = !i.checked && n >= q.max; });
+  }
+
+  // Campo "Outro"
+  const outro = $(".outro-input", card);
+  if (outro) {
+    const marcado = opts.some(i => i.value === OUTRO && i.checked);
+    if (marcado && outro.hidden) { outro.hidden = false; outro.focus(); }
+    else if (!marcado) outro.hidden = true;
+  }
+
+  limparErro(card);
+  atualizarProgresso();
+}
+
+function erroDe(q) {
+  if (q.tipo === "texto") return "";
+  const card = cards[q.id];
+  const marcados = $$("input.opt:checked", card);
+  if (!marcados.length) return q.tipo === "multipla" ? "Marque pelo menos uma opção." : "Escolha uma opção.";
+  const outro = $(".outro-input", card);
+  if (outro && marcados.some(i => i.value === OUTRO) && !outro.value.trim()) return "Escreva qual é a outra opção.";
+  return "";
+}
+
+function limparErro(card) {
+  card.classList.remove("invalida");
+  $(".erro", card).textContent = "";
+}
+
+function validarSecao(i) {
+  let primeiro = null;
+  for (const q of SECOES[i].perguntas) {
+    const card = cards[q.id];
+    const msg = erroDe(q);
+    $(".erro", card).textContent = msg;
+    card.classList.remove("invalida");
+    if (msg) {
+      void card.offsetWidth; // reinicia a animação
+      card.classList.add("invalida");
+      if (!primeiro) primeiro = card;
+    }
+  }
+  if (primeiro) primeiro.scrollIntoView({ behavior: "smooth", block: "center" });
+  return !primeiro;
+}
+
+function lerResposta(q) {
+  const card = cards[q.id];
+  if (q.tipo === "texto") return $(".txt", card).value.trim() || null;
+  const vals = $$("input.opt:checked", card).map(i => i.value);
+  if (q.tipo === "sim_nao") return vals[0] === "true";
+  const outro = $(".outro-input", card);
+  const res = vals.map(v => (v === OUTRO && outro ? outro.value.trim() : v));
+  return q.tipo === "multipla" ? res : res[0];
+}
+
+function atualizarProgresso() {
+  const feitas = OBRIGATORIAS.filter(q => $("input.opt:checked", cards[q.id])).length;
+  const pct = Math.round((feitas / OBRIGATORIAS.length) * 100);
+  $("#barra").style.width = pct + "%";
+  $("#pct").textContent = pct + "%";
+  $(".barra").setAttribute("aria-valuenow", pct);
+}
+
+function irPara(destino) {
+  const naSecao = typeof destino === "number";
+  intro.hidden = destino !== "intro";
+  fim.hidden = destino !== "fim";
+  telasSecao.forEach((t, i) => { t.hidden = i !== destino; });
+  topo.hidden = !naSecao;
+  nav.hidden = !naSecao;
+  window.scrollTo(0, 0);
+
+  if (naSecao) {
+    atual = destino;
+    const ultima = atual === SECOES.length - 1;
+    $("#etapa").textContent = `${atual + 1}/${SECOES.length}`;
+    btnVoltar.hidden = atual === 0;
+    btnProximo.textContent = ultima ? "Enviar respostas" : "Próximo";
+    btnProximo.classList.toggle("btn-enviar", ultima);
+    msgEnvio.textContent = "";
+    $("h2", telasSecao[atual]).focus({ preventScroll: true });
+  }
+}
+
+async function enviar() {
+  if (enviando) return;
+  enviando = true;
+
+  const payload = {};
+  for (const q of PERGUNTAS) payload[q.id] = lerResposta(q);
+
+  btnProximo.disabled = btnVoltar.disabled = true;
+  btnProximo.textContent = "Enviando…";
+  msgEnvio.textContent = "";
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  try {
+    const r = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    enviado = true;
+    irPara("fim");
+  } catch (err) {
+    console.error("Falha ao enviar:", err, payload);
+    msgEnvio.textContent = "Não conseguimos enviar agora. Confira sua conexão e tente de novo. Suas respostas continuam aqui.";
+    btnProximo.textContent = "Tentar de novo";
+  } finally {
+    clearTimeout(timer);
+    btnProximo.disabled = btnVoltar.disabled = false;
+    enviando = false;
+  }
+}
+
+// ---------- Montagem ----------
+SECOES.forEach((s, i) => {
+  const tela = el("section", "tela");
+  tela.hidden = true;
+  const cab = el("header");
+  const h2 = el("h2", null, s.titulo);
+  h2.tabIndex = -1;
+  cab.append(el("p", "eyebrow", `Seção ${i + 1} de ${SECOES.length}`), h2, el("p", "sub", s.sub));
+  tela.append(cab);
+  s.perguntas.forEach(q => tela.append(criarPergunta(q)));
+  app.insertBefore(tela, fim);
+  telasSecao.push(tela);
+});
+$("#n-secoes").textContent = SECOES.length;
+$("#n-perguntas").textContent = PERGUNTAS.length;
+
+$("#comecar").addEventListener("click", () => irPara(0));
+btnVoltar.addEventListener("click", () => irPara(atual - 1));
+btnProximo.addEventListener("click", () => {
+  if (!validarSecao(atual)) return;
+  if (atual < SECOES.length - 1) irPara(atual + 1);
+  else enviar();
+});
+window.addEventListener("beforeunload", e => {
+  if (atual >= 0 && !enviado) { e.preventDefault(); e.returnValue = ""; }
+});
+</script>
+</body>
+</html>
